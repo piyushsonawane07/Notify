@@ -80,9 +80,13 @@ export default function Home() {
       if(message.type === 'error') {
         toast.error(message.message);
         return;
+      }else{
+        setIsJoining(false)
+        setIsInRoom(true)
       }
       switch (message.type) {
         case 'init':
+         
           setPins(message.pins || []);
           setUsers(message.users || []);
           break;

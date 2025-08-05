@@ -1,17 +1,16 @@
-'use client';
+"use client";
 
-import { useState, useRef, useCallback, useEffect } from 'react';
-import Pin from './Pin';
+import { useState, useRef, useCallback, useEffect } from "react";
+import Pin from "./Pin";
 
-
-export default function PinBoard({ 
-  pins = [], 
-  onCreatePin, 
-  onUpdatePin, 
+export default function PinBoard({
+  pins = [],
+  onCreatePin,
+  onUpdatePin,
   onDeletePin,
   onCursorMove,
   currentUser,
-  otherUsers = []
+  otherUsers = [],
 }) {
   const boardRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -20,41 +19,44 @@ export default function PinBoard({
 
   const handleDoubleClick = (e) => {
     if (!boardRef.current) return;
-    
+
     const rect = boardRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
+
     onCreatePin(x, y);
   };
 
   const handleMouseDown = (e, pin) => {
-    if (e.target.tagName === 'TEXTAREA') return;
-    
+    if (e.target.tagName === "TEXTAREA") return;
+
     const rect = boardRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
+
     setDragPin(pin);
     setDragOffset({
       x: x - pin.x,
-      y: y - pin.y
+      y: y - pin.y,
     });
     setIsDragging(true);
     e.stopPropagation();
   };
 
-  const handleMouseMove = useCallback((e) => {
-    if (!isDragging || !dragPin) return;
-    
-    if (boardRef.current) {
-      const rect = boardRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left - dragOffset.x;
-      const y = e.clientY - rect.top - dragOffset.y;
-      
-      onUpdatePin(dragPin.id, { x, y });
-    }
-  }, [isDragging, dragPin, dragOffset, onUpdatePin]);
+  const handleMouseMove = useCallback(
+    (e) => {
+      if (!isDragging || !dragPin) return;
+
+      if (boardRef.current) {
+        const rect = boardRef.current.getBoundingClientRect();
+        const x = e.clientX - rect.left - dragOffset.x;
+        const y = e.clientY - rect.top - dragOffset.y;
+
+        onUpdatePin(dragPin.id, { x, y });
+      }
+    },
+    [isDragging, dragPin, dragOffset, onUpdatePin]
+  );
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -63,29 +65,29 @@ export default function PinBoard({
 
   const handleMouseMoveOnBoard = (e) => {
     if (!boardRef.current) return;
-    
+
     const rect = boardRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    
+
     onCursorMove(x, y);
   };
 
   // Add/remove global mouse event listeners for dragging
   useEffect(() => {
     if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
     }
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isDragging, handleMouseMove, handleMouseUp]);
 
   return (
-    <div 
+    <div
       ref={boardRef}
       className="relative flex-1 bg-gray-50 overflow-auto cursor-default"
       onDoubleClick={handleDoubleClick}
@@ -96,12 +98,13 @@ export default function PinBoard({
         className="absolute inset-0 z-0"
         style={{
           background: "#ffffff",
-          backgroundImage: "radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.2) 1px, transparent 0)",
+          backgroundImage:
+            "radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.2) 1px, transparent 0)",
           backgroundSize: "20px 20px",
         }}
       />
       {/* Pins */}
-      {pins.map(pin => (
+      {pins.map((pin) => (
         <Pin
           key={pin.id}
           pin={pin}
@@ -113,23 +116,48 @@ export default function PinBoard({
         />
       ))}
       {/* Cursors of other users */}
-      {otherUsers.map(user => (
-        user.cursor && (
-          <div
-            key={user.id}
-            className={styles.userCursor}
-            style={{
-              left: `${user.cursor.x}px`,
-              top: `${user.cursor.y}px`,
-              backgroundColor: user.color
-            }}
-          >
-            <span className={styles.cursorName} style={{ color: user.color }}>
-              {user.username}
-            </span>
-          </div>
-        )
-      ))}
+      {otherUsers.map(
+        (user) =>
+          user.cursor && (
+            <div
+              key={user.id}
+              className="absolute pointer-events-none z-50 flex flex-col items-center"
+              style={{
+                left: `${user.cursor.x}px`,
+                top: `${user.cursor.y}px`,
+              }}
+            >
+              {/* Arrow cursor */}
+              <svg
+                width={20}
+                height={24}
+                viewBox="0 0 20 24"
+                className="drop-shadow"
+                style={{ color: user.color }}
+              >
+                <polygon
+                  points="0,0 20,10 12,13 15,24 8,14 0,20"
+                  fill={user.color}
+                />
+                <polygon
+                  points="2,2 16,10 12,12 14,22 9,13 2,18"
+                  fill="white"
+                  opacity="0.3"
+                />
+              </svg>
+              {/* Username label */}
+              <span
+                className="text-xs font-semibold px-2 py-1 rounded mt-1"
+                style={{
+                  backgroundColor: user.color,
+                  color: "#fff",
+                }}
+              >
+                {user.username}
+              </span>
+            </div>
+          )
+      )}
     </div>
   );
 }
